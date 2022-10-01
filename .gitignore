@@ -1,0 +1,7 @@
+.venv
+env.py
+__pycache__
+*.session
+*.session-journal
+Signal
+db.sqlite

@@ -1,0 +1,2 @@
+Pyrogram==2.0.30
+uvloop==0.16.0
