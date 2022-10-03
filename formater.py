@@ -59,11 +59,11 @@ def format_message(id:int, message: str) -> Transaction | None:
             return Transaction(id_=id, Order=Order, Where=f'{Change_line[1]}', Emmet=Emmet, CMP=float(CMP), TP1=float(TP1), TP2=float(TP2), TP3=float(TP3), TP4=float(TP4), SL=float(SL), Risk=float(0), Update=Change_line[-1])
         elif 'close' in message.lower():
             if 'full' in message.lower():
-                return Transaction(id_=id, Order='Close', Where='', Emmet='all', CMP=float(CMP), TP1=float(0), TP2=float(0), TP3=float(0), TP4=float(0), SL=float(0), Risk=float(0), Update='')
+                return Transaction(id_=id, Order='Close', Where='NOW', Emmet='all', CMP=float(CMP), TP1=float(0), TP2=float(0), TP3=float(0), TP4=float(0), SL=float(0), Risk=float(0), Update='')
             else:
                 Emmet, Order, Other = message.split(' ', 2)
                 #CMP = Other.split()[2][:-1]
-                return Transaction(id_=id, Order=Order, Where='', Emmet=Emmet, CMP=float(CMP), TP1=float(0), TP2=float(0), TP3=float(0), TP4=float(0), SL=float(0), Risk=float(0), Update='')
+                return Transaction(id_=id, Order='Close', Where='NOW', Emmet=Emmet, CMP=float(CMP), TP1=float(0), TP2=float(0), TP3=float(0), TP4=float(0), SL=float(0), Risk=float(0), Update='')
     except Exception:
         return None
 

@@ -175,6 +175,7 @@ void OnTick()
 
       FileClose(Signal);
      }
+   if (Risk== 0) Risk=1.0;
 
    if(Order == "BUY" && Where == "NOW")
      {
@@ -247,11 +248,41 @@ void OnTick()
       if(TP4 != 0)
          int ticket=OrderSend(Emmet,OP_SELLSTOP, Lot, TP3, 3, distance_SL - TP3, TP4, CMP, magik_number,0,clrRed);
      }
+   
+   // SELL LIMIT
+   if(Order == "SELL" && Where == "LIMIT")
+     {
+      double Lot=((Risk*AccountBalance())/100)/((SL - Bid)/Point);
+      if(Lot < MinLot)
+         Lot = MinLot; 
+      if ( Bid > CMP) int ticket=OrderSend(Emmet,OP_SELLSTOP, Lot, CMP, 3, SL, TP1, "", magik_number,0,clrRed);
+      if ( Bid < CMP) int ticket=OrderSend(Emmet,OP_SELLLIMIT, Lot, CMP, 3, SL, TP1, "", magik_number,0,clrRed);
+      double distance_SL = NormalizeDouble(SL - Bid, Digits);
 
+      if(Alert_use)
+         Alert("Open oreder ", Emmet, " Sell Lot = ", Lot, " Price = ", CMP);
+     }
+   
+   // BUY LIMIT
+   if(Order == "BUY" && Where == "LIMIT")
+     {
+      double Lot=((Risk*AccountBalance())/100)/((SL - Bid)/Point);
+      if(Lot < MinLot)
+         Lot = MinLot; 
+      if ( Ask < CMP) int ticket=OrderSend(Emmet,OP_BUYSTOP, Lot, CMP, 3, SL, TP1, "", magik_number,0,clrBlue);
+      if ( Ask > CMP) int ticket=OrderSend(Emmet,OP_BUYLIMIT, Lot, CMP, 3, SL, TP1, "", magik_number,0,clrBlue);
+      double distance_SL = NormalizeDouble(SL - Bid, Digits);
+
+      if(Alert_use)
+         Alert("Open oreder ", Emmet, " Buy Lot = ", Lot, " Price = ", CMP);
+     }
+   
+   // Close now all and Emmet
    if(Order == "Close" && Where == "NOW")
      {
       for(int pos = 0; pos < OrdersTotal(); pos++)
-         if(OrderSelect(pos,SELECT_BY_POS, MODE_TRADES) == True)
+         if(OrderSelect(pos,SELECT_BY_POS, MODE_TRADES) == True){
+            // Close Emmet orders
             if(OrderMagicNumber() == magik_number && OrderSymbol() == Emmet && OrderComment() == CMP)
               {
                if(OrderType() == OP_BUY)
@@ -278,7 +309,36 @@ void OnTick()
                   OrderDelete(OrderTicket(), clrYellow);
 
               }
+            // Close all orders 
+            if(OrderMagicNumber() == magik_number && Emmet=="all" && OrderComment() == CMP)
+              {
+               if(OrderType() == OP_BUY)
+                 {
+                  for(int i; i<1000; i++)
+                     if(tickets[i] == EMPTY_VALUE)
+                       {
+                        tickets[i] = OrderComment();
+                        break;
+                       }
+                  OrderClose(OrderTicket(), OrderLots(), Bid, 3, clrBlue);
+                 }
+               if(OrderType() == OP_SELL)
+                 {
+                  for(int i; i<1000; i++)
+                     if(tickets[i] == EMPTY_VALUE)
+                       {
+                        tickets[i] = OrderComment();
+                        break;
+                       }
+                  OrderClose(OrderTicket(), OrderLots(), Ask, 3, clrRed);
+                 }
+               if(OrderType() == (OP_BUYSTOP || OP_SELLSTOP))
+                  OrderDelete(OrderTicket(), clrYellow);
+
+              }
+          }
      }
+   
 
    if(Order == "Update")
      {
