@@ -177,7 +177,7 @@ void OnTick()
      }
    if (Risk== 0) Risk=1.0;
 
-   if(Order == "BUY" && Where == "NOW")
+   if(Order == "BUY" && Where == "")
      {
       double Lot=((Risk*AccountBalance())/100)/((Ask - SL)/Point);
       if (TP4 == 0)
@@ -213,7 +213,7 @@ void OnTick()
          int ticket=OrderSend(Emmet,OP_BUYSTOP, Lot, TP3, 3, TP3 -distance_SL, TP4, CMP, magik_number,0,clrBlue);
      }
 
-   if(Order == "SELL" && Where == "NOW")
+   if(Order == "SELL" && Where == "")
      {
       double Lot=((Risk*AccountBalance())/100)/((SL - Bid)/Point);
       if (TP4 == 0)
@@ -252,12 +252,14 @@ void OnTick()
    // SELL LIMIT
    if(Order == "SELL" && Where == "LIMIT")
      {
-      double Lot=((Risk*AccountBalance())/100)/((SL - Bid)/Point);
+      double Lot=((Risk*AccountBalance())/100)/((SL - double(CMP))/Point);
       if(Lot < MinLot)
          Lot = MinLot; 
-      if ( Bid > CMP) int ticket=OrderSend(Emmet,OP_SELLSTOP, Lot, CMP, 3, SL, TP1, "", magik_number,0,clrRed);
-      if ( Bid < CMP) int ticket=OrderSend(Emmet,OP_SELLLIMIT, Lot, CMP, 3, SL, TP1, "", magik_number,0,clrRed);
-      double distance_SL = NormalizeDouble(SL - Bid, Digits);
+      int ticket;
+      if ( Bid > CMP) ticket=OrderSend(Emmet,OP_SELLSTOP, Lot, CMP, 3, 0, 0, "", magik_number,0,clrRed);
+      if ( Bid < CMP) ticket=OrderSend(Emmet,OP_SELLLIMIT, Lot, CMP, 3, 0, 0, "", magik_number,0,clrRed);
+      OrderModify(ticket, double(CMP), SL, TP1, 0, clrRed);
+      
 
       if(Alert_use)
          Alert("Open oreder ", Emmet, " Sell Lot = ", Lot, " Price = ", CMP);
@@ -266,12 +268,14 @@ void OnTick()
    // BUY LIMIT
    if(Order == "BUY" && Where == "LIMIT")
      {
-      double Lot=((Risk*AccountBalance())/100)/((SL - Bid)/Point);
+      double Lot=((Risk*AccountBalance())/100)/((double(CMP) - SL)/Point);
       if(Lot < MinLot)
-         Lot = MinLot; 
-      if ( Ask < CMP) int ticket=OrderSend(Emmet,OP_BUYSTOP, Lot, CMP, 3, SL, TP1, "", magik_number,0,clrBlue);
-      if ( Ask > CMP) int ticket=OrderSend(Emmet,OP_BUYLIMIT, Lot, CMP, 3, SL, TP1, "", magik_number,0,clrBlue);
-      double distance_SL = NormalizeDouble(SL - Bid, Digits);
+         Lot = MinLot;
+      int ticket; 
+      Print(Lot);
+      if ( Ask < CMP) ticket=OrderSend(Emmet,OP_BUYSTOP, Lot, double(CMP), 3, 0, 0, "", magik_number,0,clrBlue);
+      if ( Ask > CMP) ticket=OrderSend(Emmet,OP_BUYLIMIT, Lot, double(CMP), 3, 0, 0, "", magik_number,0,clrBlue);
+      OrderModify(ticket, double(CMP), SL, TP1, 0, clrBlue);
 
       if(Alert_use)
          Alert("Open oreder ", Emmet, " Buy Lot = ", Lot, " Price = ", CMP);
@@ -280,8 +284,9 @@ void OnTick()
    // Close now all and Emmet
    if(Order == "Close" && Where == "NOW")
      {
-      for(int pos = 0; pos < OrdersTotal(); pos++)
-         if(OrderSelect(pos,SELECT_BY_POS, MODE_TRADES) == True){
+      for (int pos=OrdersTotal()-1; pos>=0; pos--) 
+         if(OrderSelect(pos, SELECT_BY_POS) == True){
+            Print(pos);
             // Close Emmet orders
             if(OrderMagicNumber() == magik_number && OrderSymbol() == Emmet && OrderComment() == CMP)
               {
@@ -310,29 +315,30 @@ void OnTick()
 
               }
             // Close all orders 
-            if(OrderMagicNumber() == magik_number && Emmet=="all" && OrderComment() == CMP)
+            
+            if(OrderMagicNumber() == magik_number && Emmet=="all")
               {
                if(OrderType() == OP_BUY)
                  {
-                  for(int i; i<1000; i++)
+                  /*for(int i; i<1000; i++)
                      if(tickets[i] == EMPTY_VALUE)
                        {
                         tickets[i] = OrderComment();
                         break;
-                       }
+                       }*/
                   OrderClose(OrderTicket(), OrderLots(), Bid, 3, clrBlue);
                  }
                if(OrderType() == OP_SELL)
                  {
-                  for(int i; i<1000; i++)
+                  /*for(int i; i<1000; i++)
                      if(tickets[i] == EMPTY_VALUE)
                        {
                         tickets[i] = OrderComment();
                         break;
-                       }
+                       }*/
                   OrderClose(OrderTicket(), OrderLots(), Ask, 3, clrRed);
                  }
-               if(OrderType() == (OP_BUYSTOP || OP_SELLSTOP))
+               if(OrderType() == (OP_BUYSTOP || OP_SELLSTOP || OP_BUYLIMIT || OP_SELLLIMIT))
                   OrderDelete(OrderTicket(), clrYellow);
 
               }
