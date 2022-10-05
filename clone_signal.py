@@ -1,7 +1,7 @@
 from pyrogram import filters
 from pyrogram.client import Client
 import config
-import uvloop
+#import uvloop
 import formater
 import sql
 from save_signal import SaveCSVfile
@@ -13,7 +13,7 @@ from save_signal import SaveCSVfile
 # get API telegramm
 # https://my.telegram.org/apps
 
-uvloop.install()
+#uvloop.install()
 app = Client('clone_signal', api_id=config.api_id, api_hash=config.api_hash)
 
 
